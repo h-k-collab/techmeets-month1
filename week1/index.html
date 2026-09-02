@@ -183,7 +183,7 @@
     taskList.innerHTML = '';
 
     const doneCount = tasks.filter(t => t.done).length;
-    taskCount.textContent = `完了 ${doneCount} / ${tasks.length} 件`;
+    taskCount.textContent = `${doneCount} / ${tasks.length} 件完了`;
 
     if (tasks.length === 0) {
       const empty = document.createElement('li');
