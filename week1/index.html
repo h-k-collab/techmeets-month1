@@ -104,6 +104,16 @@
     font-size: 15px;
   }
 
+  .task-edit-input {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid #6c8cff;
+    border-radius: 6px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+  }
+
   .task-item.done .task-text {
     text-decoration: line-through;
     color: #aaa;
@@ -154,6 +164,7 @@
 <script>
   let tasks = [];
   let nextId = 1;
+  let editingId = null;
 
   const taskInput = document.getElementById('task-input');
   const addBtn = document.getElementById('add-btn');
@@ -179,6 +190,26 @@
     render();
   }
 
+  function startEdit(id) {
+    editingId = id;
+    render();
+  }
+
+  function commitEdit(id, value) {
+    const text = value.trim();
+    const task = tasks.find(t => t.id === id);
+    if (task && text !== '') {
+      task.text = text;
+    }
+    editingId = null;
+    render();
+  }
+
+  function cancelEdit() {
+    editingId = null;
+    render();
+  }
+
   function render() {
     taskList.innerHTML = '';
 
@@ -197,10 +228,30 @@
       const li = document.createElement('li');
       li.className = 'task-item' + (task.done ? ' done' : '');
 
+      if (task.id === editingId) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'task-edit-input';
+        input.value = task.text;
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') commitEdit(task.id, input.value);
+          if (e.key === 'Escape') cancelEdit();
+        });
+        input.addEventListener('blur', () => {
+          if (editingId === task.id) commitEdit(task.id, input.value);
+        });
+        li.appendChild(input);
+        taskList.appendChild(li);
+        input.focus();
+        input.select();
+        return;
+      }
+
       const span = document.createElement('span');
       span.className = 'task-text';
       span.textContent = task.text;
       span.addEventListener('click', () => toggleTask(task.id));
+      span.addEventListener('dblclick', () => startEdit(task.id));
 
       const delBtn = document.createElement('button');
       delBtn.className = 'delete-btn';
