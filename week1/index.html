@@ -162,6 +162,8 @@
 </div>
 
 <script>
+  const STORAGE_KEY = 'todo-tasks';
+
   let tasks = [];
   let nextId = 1;
   let editingId = null;
@@ -170,6 +172,22 @@
   const addBtn = document.getElementById('add-btn');
   const taskList = document.getElementById('task-list');
   const taskCount = document.getElementById('task-count');
+
+  function loadTasks() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (Array.isArray(saved)) {
+        tasks = saved;
+        nextId = tasks.reduce((max, t) => Math.max(max, t.id), 0) + 1;
+      }
+    } catch (e) {
+      tasks = [];
+    }
+  }
+
+  function saveTasks() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  }
 
   function addTask() {
     const text = taskInput.value.trim();
@@ -211,6 +229,7 @@
   }
 
   function render() {
+    saveTasks();
     taskList.innerHTML = '';
 
     const doneCount = tasks.filter(t => t.done).length;
@@ -269,6 +288,7 @@
     if (e.key === 'Enter') addTask();
   });
 
+  loadTasks();
   render();
 </script>
 
