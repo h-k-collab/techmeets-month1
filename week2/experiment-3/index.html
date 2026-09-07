@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ToDoリスト</title>
+<style>
+  /* すべての要素にborder-boxを適用し、paddingを含めたサイズ計算にする */
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 16px;
+    background: #f0f2f5;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+    color: #333333; /* ← 変更点：文字色を#333333に統一するため明示的に指定 */
+  }
+
+  .container {
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    padding: 28px;
+  }
+
+  h1 {
+    margin: 0 0 20px;
+    font-size: 22px;
+    text-align: center;
+    color: #333333; /* ← 変更点：#333 → #333333 に統一 */
+  }
+
+  .input-area {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  /* タスク入力欄 */
+  #task-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s;
+    color: #333333; /* ← 変更点：入力文字色を#333333に統一 */
+  }
+
+  #task-input:focus {
+    border-color: #6c8cff;
+  }
+
+  #add-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #6c8cff;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.15s;
+    color: #333333; /* ← 変更点：#fff → #333333 に統一 */
+  }
+
+  #add-btn:hover {
+    background: #5678f0;
+  }
+
+  #task-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #f8f9fb;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: background 0.15s;
+  }
+
+  .task-item:hover {
+    background: #f0f2f7;
+  }
+
+  .task-text {
+    flex: 1;
+    cursor: pointer;
+    word-break: break-word;
+    font-size: 15px;
+    color: #333333; /* ← 変更点：#333 → #333333 に統一 */
+  }
+
+  /* タスク編集用の入力欄 */
+  .task-edit-input {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid #6c8cff;
+    border-radius: 6px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    color: #333333; /* ← 変更点：編集時の文字色を#333333に統一 */
+  }
+
+  /* 完了済みタスクの見た目（打ち消し線）。文字色自体は統一するため打ち消し線のみで区別する */
+  .task-item.done .task-text {
+    text-decoration: line-through;
+    color: #333333; /* ← 変更点：#aaa → #333333 に統一（区別は取り消し線で行う） */
+  }
+
+  .delete-btn {
+    border: none;
+    background: #ff6b6b;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+    color: #333333; /* ← 変更点：#fff → #333333 に統一 */
+  }
+
+  .delete-btn:hover {
+    background: #ee5555;
+  }
+
+  .empty-message {
+    text-align: center;
+    font-size: 14px;
+    padding: 20px 0;
+    color: #333333; /* ← 変更点：#999 → #333333 に統一 */
+  }
+
+  #task-count {
+    text-align: right;
+    font-size: 13px;
+    margin: -10px 0 12px;
+    color: #333333; /* ← 変更点：#888 → #333333 に統一 */
+  }
+
+  /* ステータス絞り込みボタンのエリア */
+  .filter-area {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .filter-btn {
+    border: 1px solid #ddd;
+    background: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    color: #333333; /* ← 変更点：#666 → #333333 に統一 */
+  }
+
+  .filter-btn:hover {
+    border-color: #6c8cff;
+  }
+
+  /* 選択中のフィルターボタン */
+  .filter-btn.active {
+    background: #6c8cff;
+    border-color: #6c8cff;
+    color: #333333; /* ← 変更点：#fff → #333333 に統一 */
+  }
+
+  /* キーワード検索欄 */
+  #search-input {
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    color: #333333; /* ← 変更点：検索文字色を#333333に統一 */
+  }
+
+  #search-input:focus {
+    border-color: #6c8cff;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>ToDoリスト</h1>
+  <div class="input-area">
+    <input type="text" id="task-input" placeholder="タスクを入力...">
+    <button id="add-btn">追加</button>
+  </div>
+  <div class="filter-area">
+    <button class="filter-btn active" data-filter="all">すべて</button>
+    <button class="filter-btn" data-filter="active">未完了のみ</button>
+    <button class="filter-btn" data-filter="done">完了済みのみ</button>
+  </div>
+  <input type="text" id="search-input" placeholder="タスクを検索...">
+  <div id="task-count"></div>
+  <ul id="task-list"></ul>
+</div>
+
+<script>
+  // localStorageに保存する際のキー名
+  const STORAGE_KEY = 'todo-tasks';
+
+  let tasks = [];        // タスク一覧を保持する配列
+  let nextId = 1;         // 新規タスクに割り当てるID
+  let editingId = null;   // 現在編集中のタスクID（編集していない場合はnull）
+  let currentFilter = 'all'; // 現在選択中のステータスフィルター
+  let searchKeyword = '';    // 検索ボックスに入力されたキーワード（小文字化済み）
+
+  const taskInput = document.getElementById('task-input');
+  const addBtn = document.getElementById('add-btn');
+  const taskList = document.getElementById('task-list');
+  const taskCount = document.getElementById('task-count');
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const searchInput = document.getElementById('search-input');
+
+  // ページ読み込み時にlocalStorageからタスクを復元する
+  function loadTasks() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (Array.isArray(saved)) {
+        tasks = saved;
+        // 保存されていたタスクの最大IDより1大きい値をnextIdにする（ID重複防止）
+        nextId = tasks.reduce((max, t) => Math.max(max, t.id), 0) + 1;
+      }
+    } catch (e) {
+      // 保存データが壊れていた場合は空のリストから始める
+      tasks = [];
+    }
+  }
+
+  // 現在のタスク一覧をlocalStorageに保存する（リロードしても消えないようにする）
+  function saveTasks() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  }
+
+  // タスクを追加する
+  function addTask() {
+    const text = taskInput.value.trim();
+    if (text === '') return; // 空文字は追加しない
+    tasks.push({ id: nextId++, text: text, done: false });
+    taskInput.value = '';
+    render();
+  }
+
+  // タスクの完了/未完了を切り替える
+  function toggleTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (task) task.done = !task.done;
+    render();
+  }
+
+  // タスクを削除する
+  function deleteTask(id) {
+    tasks = tasks.filter(t => t.id !== id);
+    render();
+  }
+
+  // タスクの編集モードを開始する
+  function startEdit(id) {
+    editingId = id;
+    render();
+  }
+
+  // 編集内容を確定する
+  function commitEdit(id, value) {
+    const text = value.trim();
+    const task = tasks.find(t => t.id === id);
+    if (task && text !== '') {
+      task.text = text;
+    }
+    editingId = null;
+    render();
+  }
+
+  // 編集をキャンセルする
+  function cancelEdit() {
+    editingId = null;
+    render();
+  }
+
+  // 画面全体を再描画する（タスク一覧・件数表示・保存を行う）
+  function render() {
+    saveTasks(); // 描画のたびに最新状態をlocalStorageへ保存する
+    taskList.innerHTML = '';
+
+    const doneCount = tasks.filter(t => t.done).length;
+    taskCount.textContent = `${doneCount} / ${tasks.length} 件完了`;
+
+    // ステータスフィルターとキーワード検索の両方を満たすタスクだけを表示する
+    const visibleTasks = tasks.filter(task => {
+      if (currentFilter === 'active' && task.done) return false;
+      if (currentFilter === 'done' && !task.done) return false;
+      if (searchKeyword && !task.text.toLowerCase().includes(searchKeyword)) return false;
+      return true;
+    });
+
+    if (visibleTasks.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'empty-message';
+      empty.textContent = tasks.length === 0 ? 'タスクはありません' : '該当するタスクはありません';
+      taskList.appendChild(empty);
+      return;
+    }
+
+    visibleTasks.forEach(task => {
+      const li = document.createElement('li');
+      li.className = 'task-item' + (task.done ? ' done' : '');
+
+      // 編集中のタスクは入力欄を表示する
+      if (task.id === editingId) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'task-edit-input';
+        input.value = task.text;
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') commitEdit(task.id, input.value);
+          if (e.key === 'Escape') cancelEdit();
+        });
+        input.addEventListener('blur', () => {
+          if (editingId === task.id) commitEdit(task.id, input.value);
+        });
+        li.appendChild(input);
+        taskList.appendChild(li);
+        input.focus();
+        input.select();
+        return;
+      }
+
+      const span = document.createElement('span');
+      span.className = 'task-text';
+      span.textContent = task.text;
+      span.addEventListener('click', () => toggleTask(task.id));
+      span.addEventListener('dblclick', () => startEdit(task.id));
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-btn';
+      delBtn.textContent = '削除';
+      delBtn.addEventListener('click', () => deleteTask(task.id));
+
+      li.appendChild(span);
+      li.appendChild(delBtn);
+      taskList.appendChild(li);
+    });
+  }
+
+  addBtn.addEventListener('click', addTask);
+  taskInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  // ステータス絞り込みボタンのクリック処理
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentFilter = btn.dataset.filter;
+      filterBtns.forEach(b => b.classList.toggle('active', b === btn));
+      render();
+    });
+  });
+
+  // 検索ボックス入力時にキーワードを更新して再描画する
+  searchInput.addEventListener('input', () => {
+    searchKeyword = searchInput.value.trim().toLowerCase();
+    render();
+  });
+
+  loadTasks(); // 起動時にlocalStorageから復元
+  render();
+</script>
+
+</body>
+</html>

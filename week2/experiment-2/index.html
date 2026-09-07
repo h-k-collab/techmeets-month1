@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プロフィール</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 16px;
+    background: #f0f0f0;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+  }
+
+  .card {
+    width: 400px;
+    max-width: 100%;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    padding: 32px 28px;
+    text-align: center;
+  }
+
+  .icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 18px;
+    display: block;
+  }
+
+  .name {
+    margin: 0 0 8px;
+    font-size: 20px;
+    color: #333;
+  }
+
+  .comment {
+    margin: 0 0 20px;
+    font-size: 14px;
+    color: #666;
+  }
+
+  .badges {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .badge {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: #eef1ff;
+    color: #5678f0;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .badge:hover {
+    background: #dfe4ff;
+  }
+
+  .badge.active {
+    background: #6c8cff;
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <img class="icon" src="https://placehold.jp/100x100.png" alt="プロフィールアイコン">
+  <h1 class="name">北村 陽和</h1>
+  <p class="comment">Web開発を勉強中です。よろしくお願いします！</p>
+  <div class="badges">
+    <span class="badge">HTML</span>
+    <span class="badge">CSS</span>
+    <span class="badge">JavaScript</span>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.badge').forEach(function (badge) {
+    badge.addEventListener('click', function () {
+      badge.classList.toggle('active');
+    });
+  });
+</script>
+
+</body>
+</html>
