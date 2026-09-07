@@ -117,6 +117,11 @@
     background: #f0f2f7;
   }
 
+  /* ← 変更点：締め切りを過ぎた未完了タスクを赤くハイライトする */
+  .task-item.overdue {
+    background: #ffdada;
+  }
+
   .task-text {
     flex: 1;
     cursor: pointer;
@@ -290,6 +295,20 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
   }
 
+  // ← 変更点：今日の日付を「YYYY-MM-DD」形式（ローカル時刻基準）で取得するヘルパー関数を追加
+  function getTodayString() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  // ← 変更点：締め切りを過ぎた未完了タスクかどうかを判定する関数を追加
+  function isOverdue(task) {
+    return !!task.dueDate && !task.done && task.dueDate < getTodayString();
+  }
+
   // タスクを追加する
   function addTask() {
     const text = taskInput.value.trim();
@@ -363,7 +382,7 @@
 
     visibleTasks.forEach(task => { // ← 変更点：tasks → visibleTasks に変更（絞り込み結果のみ表示するため）
       const li = document.createElement('li');
-      li.className = 'task-item' + (task.done ? ' done' : '');
+      li.className = 'task-item' + (task.done ? ' done' : '') + (isOverdue(task) ? ' overdue' : ''); // ← 変更点：締め切り超過なら overdue クラスを付与
 
       // 編集中のタスクは入力欄を表示する
       if (task.id === editingId) {
