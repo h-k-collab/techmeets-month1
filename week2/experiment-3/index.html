@@ -130,11 +130,24 @@
     color: #333333; /* ← 変更点：#333 → #333333 に統一 */
   }
 
-  /* ← 変更点：締め切り日を表示する部分のスタイルを追加 */
+  /* ← 変更点：締め切り日を表示する部分のスタイル。クリックで編集できることを示すカーソルを追加 */
   .due-date {
     font-size: 12px;
     color: #333333;
     margin-left: 4px;
+    cursor: pointer; /* ← 変更点：クリックして編集できることを示すため追加 */
+  }
+
+  /* ← 変更点：締め切り日をリスト内で編集するための日付入力欄のスタイルを追加 */
+  .due-date-edit-input {
+    margin-left: 4px;
+    padding: 2px 4px;
+    border: 1px solid #6c8cff;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    color: #333333;
   }
 
   /* タスク編集用の入力欄 */
@@ -264,6 +277,7 @@
   let tasks = [];        // タスク一覧を保持する配列
   let nextId = 1;         // 新規タスクに割り当てるID
   let editingId = null;   // 現在編集中のタスクID（編集していない場合はnull）
+  let editingDueDateId = null; // ← 変更点：現在締め切り日を編集中のタスクID
   let currentFilter = 'all'; // ← 変更点：現在選択中のステータスフィルター
   let searchKeyword = '';    // ← 変更点：検索ボックスに入力されたキーワード（小文字化済み）
 
@@ -356,6 +370,28 @@
     render();
   }
 
+  // ← 変更点：締め切り日の編集モードを開始する関数を追加
+  function startEditDueDate(id) {
+    editingDueDateId = id;
+    render();
+  }
+
+  // ← 変更点：締め切り日の編集内容を確定する関数を追加
+  function commitDueDate(id, value) {
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+      task.dueDate = value; // 空文字（未設定）に戻すことも許可する
+    }
+    editingDueDateId = null;
+    render();
+  }
+
+  // ← 変更点：締め切り日の編集をキャンセルする関数を追加
+  function cancelDueDateEdit() {
+    editingDueDateId = null;
+    render();
+  }
+
   // 画面全体を再描画する（タスク一覧・件数表示・保存を行う）
   function render() {
     saveTasks(); // 描画のたびに最新状態をlocalStorageへ保存する
@@ -410,11 +446,32 @@
       span.addEventListener('click', () => toggleTask(task.id));
       span.addEventListener('dblclick', () => startEdit(task.id));
 
-      // ← 変更点：締め切り日が設定されていれば、タスク文字列の後ろに表示する
-      if (task.dueDate) {
+      // ← 変更点：締め切り日部分を「表示用スパン」と「編集用の日付入力欄」で切り替えて表示する
+      let dueDateEditInput = null; // 描画後にフォーカスするための参照
+      if (task.id === editingDueDateId) {
+        // ← 変更点：締め切り日の編集用input（type="date"）を作成
+        dueDateEditInput = document.createElement('input');
+        dueDateEditInput.type = 'date';
+        dueDateEditInput.className = 'due-date-edit-input';
+        dueDateEditInput.value = task.dueDate || '';
+        dueDateEditInput.addEventListener('click', (e) => e.stopPropagation()); // タスク文字列側の完了切替クリックを誤発火させない
+        dueDateEditInput.addEventListener('change', () => commitDueDate(task.id, dueDateEditInput.value));
+        dueDateEditInput.addEventListener('blur', () => {
+          if (editingDueDateId === task.id) commitDueDate(task.id, dueDateEditInput.value);
+        });
+        dueDateEditInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') cancelDueDateEdit();
+        });
+        span.appendChild(dueDateEditInput);
+      } else {
+        // ← 変更点：締め切り日の表示用スパン。クリックすると編集モードに切り替わる
         const dueSpan = document.createElement('span');
         dueSpan.className = 'due-date';
-        dueSpan.textContent = ' (期限: ' + task.dueDate + ')';
+        dueSpan.textContent = task.dueDate ? ' (期限: ' + task.dueDate + ')' : ' (期限未設定)';
+        dueSpan.addEventListener('click', (e) => {
+          e.stopPropagation(); // タスク文字列側の完了切替クリックを誤発火させない
+          startEditDueDate(task.id);
+        });
         span.appendChild(dueSpan);
       }
 
@@ -426,6 +483,11 @@
       li.appendChild(span);
       li.appendChild(delBtn);
       taskList.appendChild(li);
+
+      // ← 変更点：締め切り日編集モードのときは入力欄にフォーカスする
+      if (dueDateEditInput) {
+        dueDateEditInput.focus();
+      }
     });
   }
 
