@@ -60,6 +60,23 @@
     border-color: #6c8cff;
   }
 
+  /* ← 変更点：締め切り日を入力する日付フィールドのスタイルを追加 */
+  #due-date-input {
+    width: 130px;
+    padding: 10px 8px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    color: #333333;
+  }
+
+  /* ← 変更点：締め切り日フィールドのフォーカス時の枠線 */
+  #due-date-input:focus {
+    border-color: #6c8cff;
+  }
+
   #add-btn {
     padding: 10px 18px;
     border: none;
@@ -106,6 +123,13 @@
     word-break: break-word;
     font-size: 15px;
     color: #333333; /* ← 変更点：#333 → #333333 に統一 */
+  }
+
+  /* ← 変更点：締め切り日を表示する部分のスタイルを追加 */
+  .due-date {
+    font-size: 12px;
+    color: #333333;
+    margin-left: 4px;
   }
 
   /* タスク編集用の入力欄 */
@@ -155,7 +179,7 @@
     color: #333333; /* ← 変更点：#888 → #333333 に統一 */
   }
 
-  /* ステータス絞り込みボタンのエリア */
+  /* ← 変更点：ステータス絞り込みボタンのエリアを追加 */
   .filter-area {
     display: flex;
     justify-content: center;
@@ -163,6 +187,7 @@
     margin-bottom: 16px;
   }
 
+  /* ← 変更点：ステータス絞り込みボタンのスタイルを追加 */
   .filter-btn {
     border: 1px solid #ddd;
     background: #fff;
@@ -174,18 +199,19 @@
     color: #333333; /* ← 変更点：#666 → #333333 に統一 */
   }
 
+  /* ← 変更点：絞り込みボタンのホバー時の枠線を追加 */
   .filter-btn:hover {
     border-color: #6c8cff;
   }
 
-  /* 選択中のフィルターボタン */
+  /* ← 変更点：選択中の絞り込みボタンのスタイルを追加 */
   .filter-btn.active {
     background: #6c8cff;
     border-color: #6c8cff;
     color: #333333; /* ← 変更点：#fff → #333333 に統一 */
   }
 
-  /* キーワード検索欄 */
+  /* ← 変更点：キーワード検索欄のスタイルを追加 */
   #search-input {
     width: 100%;
     padding: 8px 12px;
@@ -198,6 +224,7 @@
     color: #333333; /* ← 変更点：検索文字色を#333333に統一 */
   }
 
+  /* ← 変更点：検索欄のフォーカス時の枠線を追加 */
   #search-input:focus {
     border-color: #6c8cff;
   }
@@ -209,13 +236,17 @@
   <h1>ToDoリスト</h1>
   <div class="input-area">
     <input type="text" id="task-input" placeholder="タスクを入力...">
+    <!-- ← 変更点：締め切り日を入力する日付フィールドを追加 -->
+    <input type="date" id="due-date-input">
     <button id="add-btn">追加</button>
   </div>
+  <!-- ← 変更点：ステータス絞り込みボタンのエリアを追加 -->
   <div class="filter-area">
     <button class="filter-btn active" data-filter="all">すべて</button>
     <button class="filter-btn" data-filter="active">未完了のみ</button>
     <button class="filter-btn" data-filter="done">完了済みのみ</button>
   </div>
+  <!-- ← 変更点：キーワード検索欄を追加 -->
   <input type="text" id="search-input" placeholder="タスクを検索...">
   <div id="task-count"></div>
   <ul id="task-list"></ul>
@@ -228,15 +259,16 @@
   let tasks = [];        // タスク一覧を保持する配列
   let nextId = 1;         // 新規タスクに割り当てるID
   let editingId = null;   // 現在編集中のタスクID（編集していない場合はnull）
-  let currentFilter = 'all'; // 現在選択中のステータスフィルター
-  let searchKeyword = '';    // 検索ボックスに入力されたキーワード（小文字化済み）
+  let currentFilter = 'all'; // ← 変更点：現在選択中のステータスフィルター
+  let searchKeyword = '';    // ← 変更点：検索ボックスに入力されたキーワード（小文字化済み）
 
   const taskInput = document.getElementById('task-input');
+  const dueDateInput = document.getElementById('due-date-input'); // ← 変更点：締め切り日フィールドの参照を取得
   const addBtn = document.getElementById('add-btn');
   const taskList = document.getElementById('task-list');
   const taskCount = document.getElementById('task-count');
-  const filterBtns = document.querySelectorAll('.filter-btn');
-  const searchInput = document.getElementById('search-input');
+  const filterBtns = document.querySelectorAll('.filter-btn'); // ← 変更点：絞り込みボタンの参照を取得
+  const searchInput = document.getElementById('search-input'); // ← 変更点：検索欄の参照を取得
 
   // ページ読み込み時にlocalStorageからタスクを復元する
   function loadTasks() {
@@ -262,8 +294,10 @@
   function addTask() {
     const text = taskInput.value.trim();
     if (text === '') return; // 空文字は追加しない
-    tasks.push({ id: nextId++, text: text, done: false });
+    const dueDate = dueDateInput.value; // ← 変更点：締め切り日の入力値を取得（未入力なら空文字）
+    tasks.push({ id: nextId++, text: text, done: false, dueDate: dueDate }); // ← 変更点：タスクにdueDateを持たせる
     taskInput.value = '';
+    dueDateInput.value = ''; // ← 変更点：締め切り日入力欄をリセット
     render();
   }
 
@@ -311,23 +345,23 @@
     const doneCount = tasks.filter(t => t.done).length;
     taskCount.textContent = `${doneCount} / ${tasks.length} 件完了`;
 
-    // ステータスフィルターとキーワード検索の両方を満たすタスクだけを表示する
+    // ← 変更点：ステータスフィルターとキーワード検索の両方を満たすタスクだけを表示する
     const visibleTasks = tasks.filter(task => {
-      if (currentFilter === 'active' && task.done) return false;
-      if (currentFilter === 'done' && !task.done) return false;
-      if (searchKeyword && !task.text.toLowerCase().includes(searchKeyword)) return false;
+      if (currentFilter === 'active' && task.done) return false; // ← 変更点
+      if (currentFilter === 'done' && !task.done) return false; // ← 変更点
+      if (searchKeyword && !task.text.toLowerCase().includes(searchKeyword)) return false; // ← 変更点
       return true;
     });
 
     if (visibleTasks.length === 0) {
       const empty = document.createElement('li');
       empty.className = 'empty-message';
-      empty.textContent = tasks.length === 0 ? 'タスクはありません' : '該当するタスクはありません';
+      empty.textContent = tasks.length === 0 ? 'タスクはありません' : '該当するタスクはありません'; // ← 変更点：絞り込み結果が0件のときの文言を追加
       taskList.appendChild(empty);
       return;
     }
 
-    visibleTasks.forEach(task => {
+    visibleTasks.forEach(task => { // ← 変更点：tasks → visibleTasks に変更（絞り込み結果のみ表示するため）
       const li = document.createElement('li');
       li.className = 'task-item' + (task.done ? ' done' : '');
 
@@ -357,6 +391,14 @@
       span.addEventListener('click', () => toggleTask(task.id));
       span.addEventListener('dblclick', () => startEdit(task.id));
 
+      // ← 変更点：締め切り日が設定されていれば、タスク文字列の後ろに表示する
+      if (task.dueDate) {
+        const dueSpan = document.createElement('span');
+        dueSpan.className = 'due-date';
+        dueSpan.textContent = ' (期限: ' + task.dueDate + ')';
+        span.appendChild(dueSpan);
+      }
+
       const delBtn = document.createElement('button');
       delBtn.className = 'delete-btn';
       delBtn.textContent = '削除';
@@ -373,7 +415,7 @@
     if (e.key === 'Enter') addTask();
   });
 
-  // ステータス絞り込みボタンのクリック処理
+  // ← 変更点：ステータス絞り込みボタンのクリック処理を追加
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       currentFilter = btn.dataset.filter;
@@ -382,7 +424,7 @@
     });
   });
 
-  // 検索ボックス入力時にキーワードを更新して再描画する
+  // ← 変更点：検索ボックス入力時にキーワードを更新して再描画する処理を追加
   searchInput.addEventListener('input', () => {
     searchKeyword = searchInput.value.trim().toLowerCase();
     render();
