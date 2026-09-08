@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>好きなスポーツ3選</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 16px;
+    background: #f0f2f5;
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI", sans-serif;
+    color: #333333;
+  }
+
+  .slide-container {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    padding: 36px 28px;
+    text-align: center;
+    transition: background 0.3s;
+  }
+
+  h1 {
+    margin: 0 0 28px;
+    font-size: 20px;
+    color: #333333;
+  }
+
+  .thumb-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .thumb-card {
+    background: #f8f9fb;
+    border-radius: 12px;
+    padding: 20px 8px;
+  }
+
+  .thumb-emoji {
+    display: block;
+    font-size: 36px;
+  }
+
+  #slide-emoji {
+    display: block;
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+
+  #slide-title {
+    margin: 0 0 12px;
+    font-size: 26px;
+    color: #333333;
+  }
+
+  #slide-description {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #333333;
+  }
+
+  .nav-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+  }
+
+  .nav-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    background: #6c8cff;
+    color: #333333;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .nav-btn:hover {
+    background: #5678f0;
+  }
+
+  .nav-btn:disabled {
+    background: #ccc;
+    cursor: default;
+  }
+
+  #slide-counter {
+    font-size: 13px;
+    color: #333333;
+  }
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+  <h1>私の好きなスポーツ3選</h1>
+
+  <div id="cover-slide" class="thumb-grid">
+    <div class="thumb-card"><span class="thumb-emoji" id="thumb-emoji-0"></span></div>
+    <div class="thumb-card"><span class="thumb-emoji" id="thumb-emoji-1"></span></div>
+    <div class="thumb-card"><span class="thumb-emoji" id="thumb-emoji-2"></span></div>
+    <div class="thumb-card"><span class="thumb-emoji" id="thumb-emoji-3"></span></div>
+    <div class="thumb-card"><span class="thumb-emoji" id="thumb-emoji-4"></span></div>
+    <div class="thumb-card"><span class="thumb-emoji" id="thumb-emoji-5"></span></div>
+  </div>
+
+  <div id="detail-slide">
+    <span id="slide-emoji"></span>
+    <h2 id="slide-title"></h2>
+    <p id="slide-description"></p>
+  </div>
+
+  <div class="nav-area">
+    <button id="prev-btn" class="nav-btn">前へ</button>
+    <span id="slide-counter"></span>
+    <button id="next-btn" class="nav-btn">次へ</button>
+  </div>
+</div>
+
+<script>
+  // スライドで紹介するスポーツのデータ（野球 → バドミントン → スノーボードの順）
+  const sports = [
+    {
+      emoji: '⚾',
+      title: '野球',
+      description: '小さい頃から見続けている競技で、一球一球で状況が変わる駆け引きの面白さが魅力です。'
+    },
+    {
+      emoji: '🏸',
+      title: 'バドミントン',
+      description: 'シャトルの速さとラリーの展開が読みにくく、体を動かすたびに新しい発見がある競技です。'
+    },
+    {
+      emoji: '🏂',
+      title: 'スノーボード',
+      description: '雪山を自由に滑り下りる爽快感が好きで、シーズンになると必ずゲレンデに通っています。'
+    }
+  ];
+
+  // 表紙に飾りとして載せる、答えとは無関係なスポーツの絵文字プール
+  const decoyEmojis = ['⚽', '🏀', '🎾', '🏐', '🏓', '⛳', '🏊', '🚴', '🏃', '🏒', '🏉', '🎳', '🥊', '🏋️', '🏹', '🤸', '🚣', '🤽'];
+
+  // スライドごとの背景（薄い色を組み合わせたグラデーション）
+  const slideBackgrounds = [
+    'linear-gradient(135deg, #fdeef4, #eaf6ff)', // 表紙
+    'linear-gradient(135deg, #eaf6ff, #fef9e7)', // 野球
+    'linear-gradient(135deg, #f3f0ff, #e9fef2)', // バドミントン
+    'linear-gradient(135deg, #eafcff, #fbeaff)'  // スノーボード
+  ];
+
+  const totalSlides = sports.length + 1; // 表紙（サムネイル一覧）1枚 + 各競技の詳細3枚
+  let currentIndex = 0; // 現在表示中のスライド番号（0が表紙）
+
+  const slideContainer = document.querySelector('.slide-container');
+  const coverSlide = document.getElementById('cover-slide');
+  const detailSlide = document.getElementById('detail-slide');
+  const slideEmoji = document.getElementById('slide-emoji');
+  const slideTitle = document.getElementById('slide-title');
+  const slideDescription = document.getElementById('slide-description');
+  const slideCounter = document.getElementById('slide-counter');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+  // 表紙スライドに、答えとは無関係なスポーツの絵文字をランダムに表示する（答えが分からないようにするため）
+  function renderCoverThumbs() {
+    const pool = [...decoyEmojis];
+    for (let i = 0; i < 6; i++) {
+      const randomIndex = Math.floor(Math.random() * pool.length);
+      const emoji = pool.splice(randomIndex, 1)[0];
+      document.getElementById(`thumb-emoji-${i}`).textContent = emoji;
+    }
+  }
+
+  // 現在のスライド内容を画面に反映する
+  function renderSlide() {
+    slideContainer.style.background = slideBackgrounds[currentIndex]; // スライドごとに薄い色の組み合わせに切り替える
+
+    if (currentIndex === 0) {
+      coverSlide.style.display = 'grid';
+      detailSlide.style.display = 'none';
+    } else {
+      coverSlide.style.display = 'none';
+      detailSlide.style.display = 'block';
+      const sport = sports[currentIndex - 1];
+      slideEmoji.textContent = sport.emoji;
+      slideTitle.textContent = sport.title;
+      slideDescription.textContent = sport.description;
+    }
+
+    slideCounter.textContent = `${currentIndex + 1} / ${totalSlides}`;
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.disabled = currentIndex === totalSlides - 1;
+  }
+
+  prevBtn.addEventListener('click', () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderSlide();
+    }
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if (currentIndex < totalSlides - 1) {
+      currentIndex++;
+      renderSlide();
+    }
+  });
+
+  renderCoverThumbs();
+  renderSlide();
+</script>
+
+</body>
+</html>
