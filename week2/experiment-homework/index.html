@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>好きなスポーツ3選</title>
 <style>
+  /* すべての要素にborder-boxを適用し、paddingを含めたサイズ計算にする */
   * {
     box-sizing: border-box;
   }
 
+  /* ページ全体の共通スタイル。中央にスライドカードを1枚配置する */
   body {
     margin: 0;
     min-height: 100vh;
@@ -21,6 +23,7 @@
     color: #333333;
   }
 
+  /* スライドカード本体。背景はJS側でスライドごとに切り替える */
   .slide-container {
     width: 100%;
     max-width: 420px;
@@ -37,6 +40,7 @@
     color: #333333;
   }
 
+  /* 表紙（1枚目）に並べるランダムな絵文字カードのグリッド */
   .thumb-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -54,10 +58,21 @@
     font-size: 36px;
   }
 
-  #slide-emoji {
-    display: block;
-    font-size: 64px;
+  /* 2〜4枚目（各競技の詳細）に表示するイラストの枠。大きめに表示する */
+  /* 変更点：スノーボードは絵文字（テキスト）のまま拡大表示するため、font-sizeも指定している */
+  .illustration {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin-bottom: 16px;
+    font-size: 150px;
+    line-height: 1;
+  }
+
+  /* イラストのSVGサイズ（旧・絵文字の64pxより大きくしている） */
+  .illustration svg {
+    width: 180px;
+    height: 180px;
   }
 
   #slide-title {
@@ -111,6 +126,7 @@
 <div class="slide-container">
   <h1>私の好きなスポーツ3選</h1>
 
+  <!-- 1枚目：答えが分からないように、無関係な絵文字をランダムに並べた表紙 -->
   <div id="cover-slide" class="thumb-grid">
     <div class="thumb-card"><span class="thumb-emoji" id="thumb-emoji-0"></span></div>
     <div class="thumb-card"><span class="thumb-emoji" id="thumb-emoji-1"></span></div>
@@ -120,8 +136,9 @@
     <div class="thumb-card"><span class="thumb-emoji" id="thumb-emoji-5"></span></div>
   </div>
 
+  <!-- 2〜4枚目：各競技を道具のイラスト（または絵文字）と文章で紹介する。変更点：人物イラストは廃止 -->
   <div id="detail-slide">
-    <span id="slide-emoji"></span>
+    <div id="slide-illustration" class="illustration"></div>
     <h2 id="slide-title"></h2>
     <p id="slide-description"></p>
   </div>
@@ -135,21 +152,25 @@
 
 <script>
   // スライドで紹介するスポーツのデータ（野球 → バドミントン → スノーボードの順）
+  // illustration には、各スライドに表示するイラスト（SVG文字列、または絵文字）を持たせている
   const sports = [
     {
-      emoji: '⚾',
       title: '野球',
-      description: '小さい頃から見続けている競技で、一球一球で状況が変わる駆け引きの面白さが魅力です。'
+      description: '小さい頃から見続けている競技で、一球一球で状況が変わる駆け引きの面白さが魅力です。',
+      // 変更点：道具のSVGイラストをやめて、元の絵文字イラスト（⚾）に戻し、それをそのまま拡大表示する
+      illustration: '⚾'
     },
     {
-      emoji: '🏸',
       title: 'バドミントン',
-      description: 'シャトルの速さとラリーの展開が読みにくく、体を動かすたびに新しい発見がある競技です。'
+      description: 'シャトルの速さとラリーの展開が読みにくく、体を動かすたびに新しい発見がある競技です。',
+      // 変更点：道具のSVGイラストをやめて、元の絵文字イラスト（🏸）に戻し、それをそのまま拡大表示する
+      illustration: '🏸'
     },
     {
-      emoji: '🏂',
       title: 'スノーボード',
-      description: '雪山を自由に滑り下りる爽快感が好きで、シーズンになると必ずゲレンデに通っています。'
+      description: '雪山を自由に滑り下りる爽快感が好きで、シーズンになると必ずゲレンデに通っています。',
+      // 変更点：以前の絵文字イラスト（🏂）に戻し、それをそのまま拡大表示する
+      illustration: '🏂'
     }
   ];
 
@@ -167,10 +188,11 @@
   const totalSlides = sports.length + 1; // 表紙（サムネイル一覧）1枚 + 各競技の詳細3枚
   let currentIndex = 0; // 現在表示中のスライド番号（0が表紙）
 
+  // 各要素をIDで取得しておく
   const slideContainer = document.querySelector('.slide-container');
   const coverSlide = document.getElementById('cover-slide');
   const detailSlide = document.getElementById('detail-slide');
-  const slideEmoji = document.getElementById('slide-emoji');
+  const slideIllustration = document.getElementById('slide-illustration');
   const slideTitle = document.getElementById('slide-title');
   const slideDescription = document.getElementById('slide-description');
   const slideCounter = document.getElementById('slide-counter');
@@ -179,35 +201,41 @@
 
   // 表紙スライドに、答えとは無関係なスポーツの絵文字をランダムに表示する（答えが分からないようにするため）
   function renderCoverThumbs() {
-    const pool = [...decoyEmojis];
+    const pool = [...decoyEmojis]; // 元の配列を壊さないようにコピーする
     for (let i = 0; i < 6; i++) {
       const randomIndex = Math.floor(Math.random() * pool.length);
-      const emoji = pool.splice(randomIndex, 1)[0];
+      const emoji = pool.splice(randomIndex, 1)[0]; // 選んだ絵文字を取り出して重複を防ぐ
       document.getElementById(`thumb-emoji-${i}`).textContent = emoji;
     }
   }
 
   // 現在のスライド内容を画面に反映する
   function renderSlide() {
-    slideContainer.style.background = slideBackgrounds[currentIndex]; // スライドごとに薄い色の組み合わせに切り替える
+    // スライドごとに背景のグラデーションを切り替える
+    slideContainer.style.background = slideBackgrounds[currentIndex];
 
     if (currentIndex === 0) {
+      // 表紙スライドを表示し、詳細スライドは隠す
       coverSlide.style.display = 'grid';
       detailSlide.style.display = 'none';
     } else {
+      // 詳細スライドを表示し、表紙は隠す
       coverSlide.style.display = 'none';
       detailSlide.style.display = 'block';
+
       const sport = sports[currentIndex - 1];
-      slideEmoji.textContent = sport.emoji;
-      slideTitle.textContent = sport.title;
-      slideDescription.textContent = sport.description;
+      slideIllustration.innerHTML = sport.illustration; // イラスト（SVGまたは絵文字）を差し込む。変更点：人物イラストは使わない
+      slideTitle.textContent = sport.title;             // 競技名を表示する
+      slideDescription.textContent = sport.description; // 説明文を表示する
     }
 
+    // 現在何枚目かを表示し、両端では該当ボタンを無効化する
     slideCounter.textContent = `${currentIndex + 1} / ${totalSlides}`;
     prevBtn.disabled = currentIndex === 0;
     nextBtn.disabled = currentIndex === totalSlides - 1;
   }
 
+  // 「前へ」ボタン：先頭でなければ1枚戻る
   prevBtn.addEventListener('click', () => {
     if (currentIndex > 0) {
       currentIndex--;
@@ -215,6 +243,7 @@
     }
   });
 
+  // 「次へ」ボタン：末尾でなければ1枚進む
   nextBtn.addEventListener('click', () => {
     if (currentIndex < totalSlides - 1) {
       currentIndex++;
@@ -222,6 +251,7 @@
     }
   });
 
+  // 初期表示：表紙の絵文字をランダムに決めてから、1枚目を描画する
   renderCoverThumbs();
   renderSlide();
 </script>
