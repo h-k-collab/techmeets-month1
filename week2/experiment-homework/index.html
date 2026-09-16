@@ -11,6 +11,8 @@
   }
 
   /* ページ全体の共通スタイル */
+  /* 変更点：旧バージョンはここでflexboxを使い、1枚のスライドカードを画面中央に配置していた。
+     カード一覧を表示する構成に変えたため、中央寄せ用のflexプロパティは不要になり削除した */
   body {
     margin: 0;
     min-height: 100vh;
@@ -20,6 +22,8 @@
     color: #333333;
   }
 
+  /* 変更点：旧バージョンはスライドカード（.slide-container）の中の見出しだったため中央揃え・下余白28pxのみだったが、
+     ページ全体の見出しになったのでmax-widthとauto marginでカード一覧と横幅を揃えている */
   h1 {
     margin: 0 auto 32px;
     max-width: 1080px;
@@ -28,7 +32,9 @@
     color: #333333;
   }
 
-  /* カードを横並びにし、入りきらない分は折り返す */
+  /* 変更点：旧バージョンの.slide-container（1枚のカードをcolumn方向に並べる箱）に代わる要素。
+     display:flexとflex-wrap:wrapの組み合わせで、3枚のカードを横並びにしつつ、
+     画面幅が足りない場合は自動で折り返す（2列→1列）ようにしている */
   .card-list {
     display: flex;
     flex-wrap: wrap;
@@ -38,7 +44,9 @@
     margin: 0 auto;
   }
 
-  /* 各競技を1枚にまとめたカード。伸縮可・基準320pxで、幅が足りなければ折り返す */
+  /* 変更点：新規追加。各競技を1枚のカードとして独立させたスタイル。
+     flex: 1 1 320px（伸びる・縮む・基準幅320px）を指定することで、
+     .card-listのflex-wrapと連動して幅に応じた折り返しが機能する */
   .card {
     display: flex;
     flex-direction: column;
@@ -50,12 +58,14 @@
     text-align: center;
   }
 
-  /* カードごとの背景（薄い色のグラデーション） */
+  /* 変更点：旧バージョンはJSのslideBackgrounds配列とcurrentIndexで背景を1つずつ動的に切り替えていたが、
+     3枚とも同時に表示するようになったため、CSSのnth-childで各カードに直接固定の背景を割り当てている */
   .card:nth-child(1) { background: linear-gradient(135deg, #eaf6ff, #fef9e7); }
   .card:nth-child(2) { background: linear-gradient(135deg, #f3f0ff, #e9fef2); }
   .card:nth-child(3) { background: linear-gradient(135deg, #eafcff, #fbeaff); }
 
-  /* イラスト（絵文字）を表示する枠 */
+  /* 変更点：旧バージョンは1枚を大きく見せるためfont-size:150pxだったが、
+     3枚を横に並べるスペースに収めるため96pxに縮小している */
   .illustration {
     display: flex;
     justify-content: center;
@@ -77,12 +87,18 @@
     line-height: 1.7;
     color: #333333;
     text-align: left;
-    /* カードの高さが揃っていても説明文は上詰めで読みやすく */
+    /* 変更点：新規追加。flex-grow:1により、説明文の長さがカードごとに違っても
+       各カードの高さ（.card-listがdisplay:flexなので既定でstretchされる）に合わせて
+       余白が下に伸び、3枚の見た目の高さが揃う */
     flex-grow: 1;
   }
 </style>
 </head>
 <body>
+
+<!-- 変更点：旧バージョンは「表紙（無関係な絵文字を並べて答えを隠す）→前へ/次へで1枚ずつ競技を表示」という
+     スライドショー構成だったが、今回はFlexboxの横並び・折り返しを見せるため、
+     表紙とナビゲーションボタンを廃止し、3競技すべてを同時に一覧表示するカードレイアウトに変更した -->
 
 <h1>私の好きなスポーツ3選</h1>
 
@@ -105,6 +121,10 @@
     <p>大学２年で初めて遊び、そこで完全にはまりました。シーズンになると必ず一度はゲレンデに行き、現在はオーリーの練習をしています。</p>
   </div>
 </div>
+
+<!-- 変更点：旧バージョンにあったJavaScript（sports/decoyEmojis配列、renderCoverThumbs、renderSlide、
+     前へ/次へボタンのイベントリスナーなど）は、動的な切り替えが不要になったため全て削除し、
+     静的なHTML+CSSのみの構成にした -->
 
 </body>
 </html>
