@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ショッピングカート</title>
+<style>
+  body { font-family: sans-serif; padding: 24px; max-width: 480px; }
+  h1 { font-size: 20px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  th { background: #f5f5f5; }
+  button { padding: 8px 20px; font-size: 14px; cursor: pointer; }
+  #result { margin-top: 16px; font-size: 18px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>🛒 ショッピングカート</h1>
+<table>
+  <thead>
+    <tr><th>商品名</th><th>単価</th><th>個数</th></tr>
+  </thead>
+  <tbody id="cart-body"></tbody>
+</table>
+<button id="calc-btn">合計を計算する</button>
+<div id="result"></div>
+
+<script>
+// =====================================================
+// ① 変数：このアプリで使う設定値を定義する
+//   const は変更しない値、let は後で更新する値に使う
+// =====================================================
+const TAX_RATE = 0.1;  // 消費税率（変更しないので const）
+let totalPrice = 0;    // 合計金額（ボタンを押したら更新するので let）
+
+// =====================================================
+// ② オブジェクト：1つの商品の情報をまとめる
+//   { 名前: 値 } のペアで関連するデータをひとつにまとめられる
+// ③ 配列：複数の商品オブジェクトをリストとして管理する
+//   [ ] の中にオブジェクトを並べて、商品一覧を表現する
+// =====================================================
+const cartItems = [
+  { name: "りんご", price: 150, quantity: 3 },
+  { name: "バナナ", price: 100, quantity: 5 },
+  { name: "みかん", price:  80, quantity: 4 },
+];
+
+// =====================================================
+// ④ 関数：合計金額を計算して返す
+//   処理をひとまとめにしておくことで、どこからでも呼び出せる
+// =====================================================
+function calcTotal(items) {
+  let subtotal = 0;
+  items.forEach(function(item) {
+    subtotal += item.price * item.quantity;  // 単価 × 個数 を加算していく
+  });
+  const tax = subtotal * TAX_RATE;
+  return subtotal + tax;  // 税込み合計を返す
+}
+
+// =====================================================
+// ⑤ DOM操作（ページ読み込み時）：商品一覧をテーブルに表示する
+//   cartItems を forEach で1件ずつ取り出し、行（tr）を生成して追加する
+// =====================================================
+const tbody = document.getElementById('cart-body');
+cartItems.forEach(function(item) {
+  const row = document.createElement('tr');
+  row.innerHTML =
+    '<td>' + item.name + '</td>' +
+    '<td>¥' + item.price + '</td>' +
+    '<td>' + item.quantity + '</td>';
+  tbody.appendChild(row);
+});
+
+// =====================================================
+// ⑥ DOM操作（ボタンクリック時）：合計を計算して画面に表示する
+//   ④の関数を呼び出して結果を取得し、id="result" の要素に書き込む
+// =====================================================
+document.getElementById('calc-btn').addEventListener('click', function() {
+  totalPrice = calcTotal(cartItems);
+  document.getElementById('result').textContent = '合計（税込）: ¥' + totalPrice;
+});
+</script>
+
+</body>
+</html>
