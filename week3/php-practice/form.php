@@ -27,14 +27,22 @@
 </form>
 
 <?php
+// 【変更】XSS対策として、HTMLエスケープ用の関数 h() を追加した（contact.php と同じもの）。
+// htmlspecialchars で < > " ' & などを無害な文字に変換するので、
+// 入力に <script> などが含まれていてもタグとして実行されず、ただの文字として表示される。
+function h($str) {
+    return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+}
+
 // $_POST にデータが入っているとき（＝フォームが送信されたとき）だけ処理する
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $username = $_POST["username"];
     $comment  = $_POST["comment"];
 
     echo '<div class="result">';
-    echo "<p><strong>名前：</strong>" . $username . "</p>";
-    echo "<p><strong>コメント：</strong>" . $comment . "</p>";
+    // 【変更】ユーザーの入力をそのまま出力していたのを、h() でエスケープしてから出力するようにした
+    echo "<p><strong>名前：</strong>" . h($username) . "</p>";
+    echo "<p><strong>コメント：</strong>" . h($comment) . "</p>";
     echo '</div>';
 }
 ?>
