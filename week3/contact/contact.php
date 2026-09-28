@@ -1,4 +1,11 @@
 <?php
+// 【変更】htmlspecialchars(..., ENT_QUOTES, 'UTF-8') が何度も出てくるため、関数 h() にまとめた。
+// 出力するときは h($変数) と書くだけでXSS対策（HTMLエスケープ）ができる。
+// エスケープの設定を変えたいときも、この関数の中を1か所直すだけで済む。
+function h($str) {
+    return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+}
+
 // エラーメッセージの格納用配列と、送信成功したかどうかのフラグ
 $errors = [];
 $submitted = false;
@@ -66,12 +73,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!-- 送信成功時：入力内容をそのまま確認画面として表示する -->
 <div class="result">
   <h2>以下の内容で送信されました</h2>
-  <!-- htmlspecialchars でエスケープしてから出力することでXSSを防止 -->
-  <p><strong>名前：</strong><?php echo htmlspecialchars($name, ENT_QUOTES, 'UTF-8'); ?></p>
-  <p><strong>メールアドレス：</strong><?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?></p>
-  <p><strong>件名：</strong><?php echo htmlspecialchars($subject, ENT_QUOTES, 'UTF-8'); ?></p>
+  <!-- h()（中身は htmlspecialchars）でエスケープしてから出力することでXSSを防止 -->
+  <!-- 【変更】htmlspecialchars(..., ENT_QUOTES, 'UTF-8') → h() に置き換え -->
+  <p><strong>名前：</strong><?php echo h($name); ?></p>
+  <p><strong>メールアドレス：</strong><?php echo h($email); ?></p>
+  <p><strong>件名：</strong><?php echo h($subject); ?></p>
   <!-- nl2br で改行を <br> に変換してから表示（メッセージは複数行を想定） -->
-  <p><strong>メッセージ：</strong><?php echo nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8')); ?></p>
+  <!-- 順番は変えていない：先に h() でエスケープ → その後 nl2br で <br> を付ける -->
+  <p><strong>メッセージ：</strong><?php echo nl2br(h($message)); ?></p>
 </div>
 
 <?php else: ?>
@@ -80,24 +89,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <?php if (!empty($errors)): ?>
 <div class="errors">
   <?php foreach ($errors as $error): ?>
-  <p><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></p>
+  <!-- 【変更】htmlspecialchars → h() に置き換え -->
+  <p><?php echo h($error); ?></p>
   <?php endforeach; ?>
 </div>
 <?php endif; ?>
 
 <!-- 入力フォーム本体：エラー時は入力済みの値を value/中身に復元する -->
+<!-- 【変更】value や textarea の中身も htmlspecialchars → h() に置き換え -->
 <form method="POST">
   <label>名前</label>
-  <input type="text" name="name" value="<?php echo htmlspecialchars($name, ENT_QUOTES, 'UTF-8'); ?>">
+  <input type="text" name="name" value="<?php echo h($name); ?>">
 
   <label>メールアドレス</label>
-  <input type="text" name="email" value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>">
+  <input type="text" name="email" value="<?php echo h($email); ?>">
 
   <label>件名</label>
-  <input type="text" name="subject" value="<?php echo htmlspecialchars($subject, ENT_QUOTES, 'UTF-8'); ?>">
+  <input type="text" name="subject" value="<?php echo h($subject); ?>">
 
   <label>メッセージ</label>
-  <textarea name="message" rows="5"><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></textarea>
+  <textarea name="message" rows="5"><?php echo h($message); ?></textarea>
 
   <button type="submit">送信</button>
 </form>
