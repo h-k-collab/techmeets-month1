@@ -40,7 +40,9 @@ $result = $stmt->get_result();
 // ---- 絞り込み用のカテゴリ一覧を取得 ----
 // DISTINCT = 重複を除く(「果物」が3件あっても1つだけ)
 // 空のカテゴリは、選択肢に出さない
-$cats = $conn->query("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category <> ''");
+$catStmt = $conn->prepare("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category <> ''");
+$catStmt->execute();
+$cats = $catStmt->get_result();
 ?>
 <!DOCTYPE html>
 <html>
@@ -107,7 +109,7 @@ $cats = $conn->query("SELECT DISTINCT category FROM products WHERE category IS N
 </body>
 </html>
 <?php
-// 後片付け: 使い終わったSQLと接続を閉じる
+$catStmt->close();
 $stmt->close();
 $conn->close();
 ?>
